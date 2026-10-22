@@ -4,14 +4,29 @@ import { useEffect } from "react"
 
 function StudentList(){
 
+    const [loading,setLoading] = useState(true);
+    const [saving,setSaving] = useState(false);
+    const [error,setError] = useState("");
+    const [success,setSuccess] = useState("");
+
     async function getStudentData(){
+        try{
             const response = await fetch("http://localhost:3000/api/students");
             const studentData = await response.json();
             setStudents(studentData);
         }
+        catch(error){
+            setError(error.message);
+        }
+        finally{
+            setLoading(false);
+        }
+        }
 
     const [students,setStudents] = useState([]);
     useEffect(()=>{
+        setError("");
+        setSuccess("");
         getStudentData();
         console.log(students)
     },[]);
@@ -29,8 +44,12 @@ function StudentList(){
     }
 
     function addNewStudent(e){
+        setSaving(true);
+        setError("");
+        setSuccess("");
         e.preventDefault();
         async function sendData(){
+            try{
             const response = await fetch("http://localhost:3000/api/students",
                 {
                     method: "POST",
@@ -43,14 +62,29 @@ function StudentList(){
                     })
                 }
             );
+
+            if(!response.ok){
+                throw new Error ("Enable to add this Student, please make sure age is >18 ")
+            }
+        
             const newStudentData = await response.json();
+            setSuccess(` Student name: ${name} Data is saved suceesfully `)
             console.log(newStudentData);
             getStudentData();
             
         }
+         catch(error){
+            setError(error.message);
+        }
+        finally{
+            setSaving(false);
+        }
+    }
         sendData();
     }
     function editStudent(id){
+        setError("");
+        setSuccess("");
 
         let newName = prompt("Enter New Name");
         let newAge = prompt("Enter New Age");
@@ -76,17 +110,28 @@ function StudentList(){
     }
 
     function deleteStudent(id){
+        setError("");
+        setSuccess("");
 
         async function deleteData(){
+        try{
             const response = await fetch(`http://localhost:3000/api/students/${id}`,{
                 method: "DELETE"
             });
 
             const deletedStudent = await response.json();
             console.log(deletedStudent)
+
+        }
+        catch(error){
+            setError(error.message);
+        }
             getStudentData();
         }
         deleteData(id);
+    }
+    if(loading){
+        return(<h1> Loading..... </h1>);
     }
     return(
         <>
@@ -94,9 +139,13 @@ function StudentList(){
             <label htmlFor="nameInput">Name: </label>
             <input type="text" placeholder="Enter Name here.." value={name} onChange={handleNameInput} id="nameInput"/>
             <label htmlFor="ageInput">Age: </label>
-            <input type="Number" placeholder="Enter Age here.." value={age} onChange={handleAgeInput} id="nameInput"/>
-            <button type="submit"> Add New Student </button>
+            <input type="Number" placeholder="Enter Age here.." value={age} onChange={handleAgeInput} id="ageInput"/>
+            <button type="submit" disabled={saving}> {saving ? "Saving...": "Add New Student"} </button>
         </form>
+        <div className="message">
+           {error &&  <p> {error} </p>}
+           {success && <p> {success}</p>}
+        </div>
          <h1> All Studnets Info is here: </h1>
          <ul>
          {students.map((student)=>{

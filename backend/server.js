@@ -57,8 +57,8 @@ app.post("/api/students", async (req,res) =>{
             age: age
         });
 
-        newStudent.save().then(res => console.log(`${res.name} data is saved`))
-        .catch(err => console.log(err));
+        await newStudent.save();
+        console.log(`${name}'s data is saved`);
 
         res.status(201).json({
             newStudent : newStudent,
