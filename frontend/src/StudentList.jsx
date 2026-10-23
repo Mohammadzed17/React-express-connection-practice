@@ -4,6 +4,10 @@ import { useEffect } from "react"
 
 function StudentList(){
 
+    const API_URL = import.meta.env.VITE_API_URL;
+
+
+
     const [loading,setLoading] = useState(true);
     const [saving,setSaving] = useState(false);
     const [error,setError] = useState("");
@@ -11,9 +15,14 @@ function StudentList(){
 
     async function getStudentData(){
         try{
-            const response = await fetch("http://localhost:3000/api/students");
+            const response = await fetch(`${API_URL}/api/students`);
+            
+            if(!response.ok){
+                throw new Error("Could Not Fetch Students List")
+            }
             const studentData = await response.json();
             setStudents(studentData);
+
         }
         catch(error){
             setError(error.message);
@@ -50,7 +59,7 @@ function StudentList(){
         e.preventDefault();
         async function sendData(){
             try{
-            const response = await fetch("http://localhost:3000/api/students",
+            const response = await fetch(`${API_URL}/api/students`,
                 {
                     method: "POST",
                     headers: {
@@ -89,9 +98,13 @@ function StudentList(){
         let newName = prompt("Enter New Name");
         let newAge = prompt("Enter New Age");
 
-
+       
         async function editData(id){
-            const response = await fetch(`http://localhost:3000/api/students/${id}`,{
+            setSuccess("");
+            setError("");
+            
+            try{
+            const response = await fetch(`${API_URL}/api/students/${id}`,{
                 method: "PATCH",
                 headers:{
                     "Content-Type": "application/json"
@@ -101,10 +114,20 @@ function StudentList(){
                     age: newAge
                 })
             });
+
+            if(!response.ok){
+                throw new Error("Enable to Edit This Student's Data")
+            }
             const updatedData = await response.json();
             console.log(updatedData);
+            setSuccess(`${newName} data is updated successfully`)
+        }
+          catch(error){
+            setError(error.message);
+        }
             getStudentData();
         }
+       
         editData(id);
 
     }
@@ -115,13 +138,17 @@ function StudentList(){
 
         async function deleteData(){
         try{
-            const response = await fetch(`http://localhost:3000/api/students/${id}`,{
+            const response = await fetch(`${API_URL}/api/students/${id}`,{
                 method: "DELETE"
             });
 
+            if(!response.ok){
+                throw new Error("Enable to Delete")
+            }
             const deletedStudent = await response.json();
             console.log(deletedStudent)
 
+            setSuccess("Student Data is Successfully Deleted");
         }
         catch(error){
             setError(error.message);
